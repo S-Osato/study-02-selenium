@@ -52,11 +52,13 @@ def main():
         # driverを起動
         driver = set_driver()
         
+        f.write(get_timestamp() + search_keyword + "で検索します。\n")
+        
+        url = "https://tenshoku.mynavi.jp/list/kw" + search_keyword
         # Webサイトを開く
-        driver.get("https://tenshoku.mynavi.jp/")
+        driver.get(url)
         time.sleep(5)
         
-        f.write(get_timestamp() + search_keyword + "で検索します。\n")
         
         
         '''
@@ -74,19 +76,9 @@ def main():
         except:
             pass
 
-
-        '''
-        find_elementでHTML要素(WebElement)を取得する
-        byで、要素を特定する属性を指定するBy.CLASS_NAMEの他、By.NAME、By.ID、By.CSS_SELECTORなどがある
-        特定した要素に対して、send_keysで入力、clickでクリック、textでデータ取得が可能
-        '''
-        # 検索窓に入力
-        driver.find_element(by=By.CLASS_NAME, value="topSearch__text").send_keys(search_keyword)
-        # 検索ボタンクリック
-        driver.find_element(by=By.CLASS_NAME, value="topSearch__button").click()
-
         # 空のDataFrame作成
         df = pd.DataFrame()
+        page = 1
         while True:
             '''
             find_elements(※複数形)を使用すると複数のデータがListで取得できる
@@ -116,10 +108,18 @@ def main():
             f.write(log_text)
             print("------------------------------------------------")
             try:
-                driver.find_element(by=By.CLASS_NAME, value="iconFont--arrowLeft").click()
+                page += 1
+                url = "https://tenshoku.mynavi.jp/list/kw" + search_keyword + "/pg" + str(page)
+                # Webサイトを開く
+                driver.get(url)
                 time.sleep(5)
+                
+                # 次のページがない
+                if not "/pg" + str(page) in driver.current_url:
+                    f.write(get_timestamp() + '取得が完了しました。\n')
+                    break
             except:
-                f.write(get_timestamp() + '取得が完了しました。')
+                f.write(get_timestamp() + '取得が完了しました。\n')
                 break
 
         df.to_csv("output.csv")
